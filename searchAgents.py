@@ -255,10 +255,13 @@ class StayEastSearchAgent(SearchAgent):
 # This portion is incomplete.  Time to write code!  #
 #####################################################
 
-def yourHeuristic(position, problem, info={}):
+def manhattanHeuristic(position, problem, info={}):
     "The heuristic distance for a PositionSearchProblem"
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    xy1 = position
+    xy2 = problem.goal
+    return (abs(xy1[0] - xy2[0]) + abs(xy1[1] - xy2[1])) 
+
 
 class yourSearchAgent(SearchAgent):
     """

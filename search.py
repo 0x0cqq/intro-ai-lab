@@ -113,19 +113,121 @@ def depthFirstSearch(problem):
     print("Is the start a goal?", problem.isGoalState(problem.getStartState()))
     """
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    # get the initial state
+    initial_state = problem.getStartState()
+
+    def dfs(now_state, visited):
+        visited = visited + [now_state]
+        # now_state: current state
+        # last_state: last state, we need to avoid this state when searching for next state
+        if(problem.isGoalState(now_state)):
+            # if the current state is the goal state, return the path
+            from game import Actions
+            return [Actions.vectorToDirection((0,0))]
+        else:
+            # if the current state is not the goal state,
+            # expand the current state and get the next state
+            next_states = problem.expand(now_state)
+            # recursively call dfs to get the path
+            for next_state in next_states:
+                if(next_state[0] in visited):
+                    continue
+                path = dfs(next_state[0], visited)
+                # vaild path
+                if path != None:
+                    return [next_state[1]] + path
+            return None
+    # call dfs on the initial state
+    return dfs(initial_state, [])
 
 def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+
+    def bfs():
+        # queue: (state, path, distance)
+        from util import Queue
+        queue = Queue()
+        # visited: states
+        visited = []
+        # add initial state into queue
+        queue.push((problem.getStartState(), [], 0))
+        visited.append(problem.getStartState())
+        while(not queue.isEmpty()):
+            now_state = queue.pop(0)
+            # if the current state is the goal state, return the path
+            if(problem.isGoalState(now_state[0])):
+                return now_state[1]
+            if(now_state in visited):
+                continue
+            # if the current state is not the goal state,
+            # expand the current state and get the next state
+            next_states = problem.expand(now_state[0])
+            # add next state into queue
+            for next_state in next_states:
+                queue.append((next_state[0], now_state[1] + [next_state[1]], now_state[2] + 1))
+                visited.append(next_state[0])
+        return None
+    
+    return bfs()
 
 def uniformCostSearch(problem):
     """Search the node of least cost from the root."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    from util import PriorityQueue
+
+
+    def ucs():
+        q = PriorityQueue()
+        q.update((problem.getStartState(), [], 0), 0)
+        visited = []
+        while(not q.isEmpty()):
+            now_state = q.pop()
+            if(problem.isGoalState(now_state[0])):
+                return now_state[1]
+            if(now_state[0] in visited):
+                continue
+            visited.append(now_state[0])
+            next_states = problem.expand(now_state[0])
+            for next_state in next_states:
+                if(next_state[0] in visited):
+                    continue
+                # add next state into queue
+                q.update(
+                    (next_state[0], 
+                     now_state[1] + [next_state[1]]),
+                     now_state[2] + problem.getActionCost(now_state[0], next_state[1], next_state[0]))
+        return None
+    
+    return ucs()
 
 def aStarSearch(problem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    from util import PriorityQueue
+    from searchAgents import yourHeuristic
+
+    def astar():
+        q = PriorityQueue()
+        q.update((problem.getStartState(), [], 0), heuristic(problem.getStartState(), problem))
+        visited = []
+        while(not q.isEmpty()):
+            now_state = q.pop()
+            if(problem.isGoalState(now_state[0])):
+                return now_state[1]
+            if(now_state[0] in visited):
+                continue
+            visited.append(now_state[0])
+            next_states = problem.expand(now_state[0])
+            for next_state in next_states:
+                if(next_state[0] in visited):
+                    continue
+                # add next state into queue
+                q.update(
+                    (next_state[0], 
+                     now_state[1] + [next_state[1]], 
+                     now_state[2] + problem.getActionCost(now_state[0], next_state[1], next_state[0])),
+                     now_state[2] + problem.getActionCost(now_state[0], next_state[1], next_state[0]) + heuristic(next_state[0], problem))
+        return None
+
+    return astar()
