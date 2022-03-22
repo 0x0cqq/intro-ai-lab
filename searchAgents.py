@@ -20,9 +20,12 @@ description for details.
 Good luck and happy searching!
 """
 
+from typing import Tuple
+
 from game import Directions
 from game import Agent
 from game import Actions
+from pacman import GameState
 import util
 import time
 import search
@@ -263,10 +266,34 @@ def manhattanHeuristic(position, problem, info={}):
     return (abs(xy1[0] - xy2[0]) + abs(xy1[1] - xy2[1])) 
 
 
-class yourSearchAgent(SearchAgent):
+class FoodSearchProblem(PositionSearchProblem):
+    """
+    This class describe a food search problem. In this problem, we store the food, and the goal is to get all food in the quickest way.
+    """
+    def __init__(self, gameState : GameState, start : Tuple[int,int] = None, warn : bool = True, visualize : bool = True):
+        """
+        Stores the food for later reference
+        """
+        super().__init__(gameState, start=start, warn=False, visualize=visualize)
+        self.costFn = lambda pos : 1000 if 2 <= pos[0] and pos[1] != 1 and pos[1] != 5 else 1
+        self.goal = (16,1)
+        if warn and (gameState.getNumFood() == 0):
+            print('Warning: this does not look like a regular food search maze')
+
+class MediumScarySearchProblem(PositionSearchProblem):
+    """
+    This class describe a "Medium Scary problem. 
+    In this problem, we try to avoid the monster by walking in the above part of the maze.
+    """
+    def __init__(self, gameState : GameState, start : Tuple[int,int] = None, warn : bool = True, visualize : bool = True):
+        super().__init__(gameState, start=start, warn=False, visualize=visualize)
+        self.costFn = lambda pos : 1000 if 8 <= pos[0] and pos[1] <= 15 else 1
+        self.goal = (1,1)
+        if warn and (gameState.getNumFood() == 0):
+            print('Warning: this does not look like a regular food search maze')
+class MySearchAgent(SearchAgent):
     """
     You can design different SearchAgents for different Mazes
     """
-    def __init__(self):
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+    def __init__(self, fn='aStarSearch', prob='FoodSearchProblem', heuristic='nullHeuristic'):
+        super().__init__(fn, prob, heuristic)

@@ -3,6 +3,7 @@ In search.py, you will implement generic search algorithms which are called by
 Pacman agents (in searchAgents.py).
 """
 
+from time import sleep
 import util
 
 #######################################################
@@ -147,26 +148,25 @@ def breadthFirstSearch(problem):
     def bfs():
         # queue: (state, path, distance)
         from util import Queue
-        queue = Queue()
+        q = Queue()
         # visited: states
         visited = []
         # add initial state into queue
-        queue.push((problem.getStartState(), [], 0))
-        visited.append(problem.getStartState())
-        while(not queue.isEmpty()):
-            now_state = queue.pop(0)
+        q.push((problem.getStartState(), [], 0))
+        while(not q.isEmpty()):
+            now_state = q.pop()
             # if the current state is the goal state, return the path
             if(problem.isGoalState(now_state[0])):
                 return now_state[1]
-            if(now_state in visited):
+            if(now_state[0] in visited):
                 continue
+            visited.append(now_state[0])
             # if the current state is not the goal state,
             # expand the current state and get the next state
             next_states = problem.expand(now_state[0])
             # add next state into queue
             for next_state in next_states:
-                queue.append((next_state[0], now_state[1] + [next_state[1]], now_state[2] + 1))
-                visited.append(next_state[0])
+                q.push((next_state[0], now_state[1] + [next_state[1]], now_state[2] + 1))
         return None
     
     return bfs()
@@ -179,23 +179,25 @@ def uniformCostSearch(problem):
 
     def ucs():
         q = PriorityQueue()
-        q.update((problem.getStartState(), [], 0), 0)
-        visited = []
+        # postion, actions, total cost, visited positions
+        q.update((problem.getStartState(), [], 0, []), 0)
+        visited = {}
         while(not q.isEmpty()):
             now_state = q.pop()
+            # print(now_state)
+            # sleep(1)
             if(problem.isGoalState(now_state[0])):
                 return now_state[1]
-            if(now_state[0] in visited):
+            if(now_state[0] in visited and visited[now_state[0]] <= now_state[2]):
                 continue
-            visited.append(now_state[0])
+            visited[now_state[0]] = now_state[2]
             next_states = problem.expand(now_state[0])
             for next_state in next_states:
-                if(next_state[0] in visited):
-                    continue
                 # add next state into queue
                 q.update(
                     (next_state[0], 
-                     now_state[1] + [next_state[1]]),
+                     now_state[1] + [next_state[1]], 
+                     now_state[2] + problem.getActionCost(now_state[0], next_state[1], next_state[0])),
                      now_state[2] + problem.getActionCost(now_state[0], next_state[1], next_state[0]))
         return None
     
@@ -205,7 +207,6 @@ def aStarSearch(problem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
     "*** YOUR CODE HERE ***"
     from util import PriorityQueue
-    from searchAgents import yourHeuristic
 
     def astar():
         q = PriorityQueue()
