@@ -1,6 +1,8 @@
-from game import Directions
+from game import Actions, Directions
+from typing import Tuple
 import random, util
 
+from pacman import GameState
 from game import Agent
 
 #######################################################
@@ -13,6 +15,15 @@ def scoreEvaluationFunction(currentGameState):
     The score is the same one displayed in the Pacman GUI.
     """
     return currentGameState.getScore()
+
+def myScoreEvaluationFunction(currentGameState : GameState):
+    # considering the food and the ghost's relative position
+    ans = 0
+    for food in currentGameState.getFood().asList():
+        ans += 20 / (abs(food[0] - currentGameState.getPacmanPosition()[0]) + abs(food[1] - currentGameState.getPacmanPosition()[1]) + 10)
+    ans += currentGameState.getScore()
+    return ans
+
 
 class MultiAgentSearchAgent(Agent):
     """
@@ -40,55 +51,80 @@ class MultiAgentSearchAgent(Agent):
 #####################################################
 
 
+
+
 class MinimaxAgent(MultiAgentSearchAgent):
     """
     Your minimax agent (question 3)
     """
 
-    def getAction(self, gameState):
-        """
-        Returns the minimax action from the current gameState using self.depth
-        and self.evaluationFunction.
+    from pacman import GameState
 
-        Here are some method calls that might be useful when implementing minimax.
+    def searchForAgent(self, gameState : GameState, agentIndex : int, depth : int) -> Tuple[Actions, float]:
+        # search the next step for the agent[agentIndex]
+        if(gameState.isLose() or gameState.isWin() or depth == 0):
+            # lose or win or reach maxium depth
+            return (None, self.evaluationFunction(gameState))
+        # the second is the next_state value, we see shorter to avoid trapped
+        best_score = float("-inf") if agentIndex == 0 else float("inf")
+        best_action = None
+        best_next_state_score = None
+        # iterate all the actions
+        for action in gameState.getLegalActions(agentIndex):
+            # get the next state
+            nextState = gameState.generateChild(agentIndex, action)
+            next_state_score = self.evaluationFunction(nextState)
+            (next_agent_action, next_agent_score) = self.searchForAgent(nextState, (0 if agentIndex + 1 == gameState.getNumAgents() else agentIndex + 1) , depth - 1)
+            if((agentIndex == 0 and (next_agent_score > best_score or (next_agent_score == best_score and next_state_score > best_next_state_score))) or (agentIndex != 0 and next_agent_score < best_score)):
+                best_score = next_agent_score
+                best_action = action
+                best_next_state_score = next_state_score
+            
+        return (best_action, best_score)
 
-        gameState.getLegalActions(agentIndex):
-        Returns a list of legal actions for an agent
-        agentIndex=0 means Pacman, ghosts are >= 1
-
-        we assume ghosts act in turn after the pacman takes an action
-        so your minimax tree will have multiple min layers (one for each ghost)
-        for every max layer
-
-        gameState.generateChild(agentIndex, action):
-        Returns the child game state after an agent takes an action
-
-        gameState.getNumAgents():
-        Returns the total number of agents in the game
-
-        gameState.isWin():
-        Returns whether or not the game state is a winning state
-
-        gameState.isLose():
-        Returns whether or not the game state is a losing state
-
-        self.evaluationFunction(state)
-        Returns pacman SCORE in current state (useful to evaluate leaf nodes)
-
-        self.depth
-        limits your minimax tree depth (note that depth increases one means
-        the pacman and all ghosts has already decide their actions)
-        """
-        util.raiseNotDefined()
+    def getAction(self, gameState):        
+        return self.searchForAgent(gameState, 0, self.depth)[0]
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
     """
     Your minimax agent with alpha-beta pruning (question 3)
     """
 
-    def getAction(self, gameState):
-        """
-        Returns the minimax action using self.depth and self.evaluationFunction
-        """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+    # search the next step for the agent[agentIndex]
+    # return the action and the score
+    # alpha is the highest score in the max node 
+    # beta is the lowest score in the min node
+    def searchForAgent(self, gameState : GameState, agentIndex : int, depth : int, alpha : float, beta : float) -> Tuple[Actions, float]:
+        # search the next step for the agent[agentIndex]
+        if(gameState.isLose() or gameState.isWin() or depth == 0):
+            # lose or win or reach maxium depth
+            return (None, self.evaluationFunction(gameState))
+        # the second is the next_state value, we see shorter to avoid trapped
+        best_score = float("-inf") if agentIndex == 0 else float("inf")
+        best_action = None
+        best_next_state_score = None
+        # iterate all the actions
+        for action in gameState.getLegalActions(agentIndex):
+            # get the next state
+            nextState = gameState.generateChild(agentIndex, action)
+            next_state_score = self.evaluationFunction(nextState)
+            # generate new alpha and beta
+            (next_agent_action, next_agent_score) = self.searchForAgent(nextState, (0 if agentIndex + 1 == gameState.getNumAgents() else agentIndex + 1) , depth - 1, alpha, beta)
+            if((agentIndex == 0 and (next_agent_score > best_score or (next_agent_score == best_score and next_state_score > best_next_state_score))) or (agentIndex != 0 and next_agent_score < best_score)):
+                best_score = next_agent_score
+                best_action = action
+                best_next_state_score = next_state_score
+            # pruning, then update alpha and beta
+            if(agentIndex == 0):
+                if(best_score >= beta):
+                    return (best_action, best_score)
+                alpha = max(alpha, best_score)
+            else:
+                if(best_score <= alpha):
+                    return (best_action, best_score)
+                beta = min(beta, best_score)
+
+        return (best_action, best_score)
+
+    def getAction(self, gameState):        
+        return self.searchForAgent(gameState, 0, self.depth, float("-inf"), float("inf"))[0]
