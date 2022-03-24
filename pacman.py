@@ -508,6 +508,8 @@ def readCommand( argv ):
                       help='Turns on exception handling and timeouts during games', default=False)
     parser.add_option('--timeout', dest='timeout', type='int',
                       help=default('Maximum length of time an agent can spend computing in a single game'), default=30)
+    parser.add_option('-s', '--save',dest='save',help='save the game parameter when running the game', 
+                      action='store_true',default=False)
 
     options, otherjunk = parser.parse_args(argv)
     if len(otherjunk) != 0:
@@ -555,6 +557,7 @@ def readCommand( argv ):
     args['record'] = options.record
     args['catchExceptions'] = options.catchExceptions
     args['timeout'] = options.timeout
+    args['save'] = options.save
 
     # Special case: recorded games don't use the runGames method or args structure
     if options.gameToReplay != None:
@@ -610,7 +613,7 @@ def replayGame( layout, actions, display ):
 
     display.finish()
 
-def runGames( layout, pacman, ghosts, display, numGames, record, numTraining = 0, catchExceptions=False, timeout=30 ):
+def runGames( layout, pacman, ghosts, display, numGames, record, numTraining = 0, catchExceptions=False, timeout=30, save=False):
     import __main__
     __main__.__dict__['_display'] = display
 
@@ -647,6 +650,12 @@ def runGames( layout, pacman, ghosts, display, numGames, record, numTraining = 0
         print('Scores:       ', ', '.join([str(score) for score in scores]))
         print('Win Rate:      %d/%d (%.2f)' % (wins.count(True), len(wins), winRate))
         print('Record:       ', ', '.join([ ['Loss', 'Win'][int(w)] for w in wins]))
+        if(save):
+            with open('score.txt', 'a') as f:
+                f.write(str(sum(scores) / float(len(scores))) + '\n')
+                f.write(', '.join([str(score) for score in scores]) + '\n')
+                f.write('Win Rate:      %d/%d (%.2f)\n' % (wins.count(True), len(wins), winRate))
+                f.write('Record:       ' + ', '.join([ ['Loss', 'Win'][int(w)] for w in wins]) + '\n')
 
     return games
 
