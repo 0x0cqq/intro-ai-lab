@@ -229,6 +229,6 @@ def aStarSearch(problem, heuristic=nullHeuristic):
                      now_state[1] + [next_state[1]], 
                      now_state[2] + problem.getActionCost(now_state[0], next_state[1], next_state[0])),
                      now_state[2] + problem.getActionCost(now_state[0], next_state[1], next_state[0]) + heuristic(next_state[0], problem))
-        return None
+        return None     
 
     return astar()
