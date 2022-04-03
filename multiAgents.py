@@ -23,7 +23,7 @@ def myScoreEvaluationFunction(currentGameState: GameState):
     # considering the food and the ghost's relative position
     ans = 0
     for food in currentGameState.getFood().asList():
-        ans += 20 / (abs(food[0] - currentGameState.getPacmanPosition()[0]) +
+        ans += 50 / (abs(food[0] - currentGameState.getPacmanPosition()[0]) +
                      abs(food[1] - currentGameState.getPacmanPosition()[1]) + 10)
     ans += currentGameState.getScore()
     return ans

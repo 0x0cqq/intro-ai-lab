@@ -672,6 +672,8 @@ if __name__ == '__main__':
     > python pacman.py --help
     """
 
+    sys.setrecursionlimit(1000000)
+
     args = readCommand( sys.argv[1:] ) # Get game components based on input
     runGames( **args )
 
